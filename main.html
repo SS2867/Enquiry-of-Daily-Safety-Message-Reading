@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<head>
+    <title>Enquiry of Daily Safety Message Reading</title>
+
+</head>
+<body>
+    <h2>Enquiry of Daily Safety Message Reading</h2>
+    <input id="staffID" type="text" placeholder="Staff ID"><br>
+    <input id="keyCode" type="password" placeholder="Key Code"><br>
+    <input id="refCode" type="text" placeholder="Reference Code"><br>
+    <button onclick="enquire()">Enquire</button>
+    <br><br>
+    <table id="thismonth">
+        <tr colspan="7" id="table-title-this"></tr>
+        <tr id="table-week-this">
+            <td>Sun</td>
+            <td>Mon</td>
+            <td>Tue</td>
+            <td>Wed</td>
+            <td>Thu</td>
+            <td>Fri</td>
+            <td>Sat</td>
+        </tr>
+    </table>
+    <table id="lastmonth">
+        <tr colspan="7" id="table-title-last"></tr>
+        <tr id="table-week-this-last">
+            <td>Sun</td>
+            <td>Mon</td>
+            <td>Tue</td>
+            <td>Wed</td>
+            <td>Thu</td>
+            <td>Fri</td>
+            <td>Sat</td>
+        </tr>
+    </table>
+</body>
+<script>
+    var now = new Date();
+    var lastMonth = new Date((new Date()).setMonth(now.getMonth()-1))
+    document.getElementById("table-title-this").innerHTML = now.toLocaleString('default', { month: 'short' });
+    document.getElementById("table-title-last").innerHTML = lastMonth.toLocaleString('default', { month: 'short' });
+    for(day of getDaysInMonth(now.getFullYear() , now.getMonth())){
+        
+    }
+
+
+    function enquire(){
+        var staffID = document.getElementById("staffID").value;
+        var keyCode = document.getElementById("keyCode").value;
+        var refCode = document.getElementById("refCode").value;
+
+        var params = new URLSearchParams({staffID: staffID,  keyCode: keyCode,  refCode: refCode});
+        var url = "https://script.google.com/macros/s/AKfycbyre_ku290wvcWgbPdfcTkmhr9PnQEfs23Xh-bN8svF1FiZddJDLmYzhRSaejDiM-8D_A/exec";
+        
+        console.log(url + '?' + params)
+        fetch(url + '?' + params, {
+            redirect: "follow",
+            method: 'GET',
+            headers: {
+                'Content-Type': 'text/plain'}
+        })
+            .then(function(response) {
+                console.log(response);
+                if (response.ok) {return response.json();} else {throw new Error('Request failed:', response.status);}
+            })
+            .then(function(responseData) {console.log(responseData); displayResult(responseData.content);})
+            .catch(function(error) {console.log('Request error:', error); });
+        
+    }
+
+    function displayResult(recordList){
+        ear
+        for (record of recordList){
+            date = new Date(String(record.date).slice(0, 10))
+            
+        }
+    }
+
+    function getDaysInMonth(year, month) {
+        const daysInMonth = [];
+        const date = new Date(year, month, 1);
+
+        while (date.getMonth() === month) {
+            daysInMonth.push(new Date(date));
+            date.setDate(date.getDate() + 1);
+        }
+
+        return daysInMonth;
+    }
+
+    function getDayInWeek(date) {
+        const target = new Date(date.valueOf());
+        const dayNumber = (date.getUTCDay()) % 7;
+        return dayNumber;
+    }
+
+    function addRowToColumn(columnId, rowData) {
+        const column = document.getElementById(columnId); // Get the column element
+
+        const newRow = document.createElement('tr');
+
+        rowData.forEach(data => {
+            const cell = document.createElement('td');
+            cell.textContent = data;
+            newRow.appendChild(cell);
+        });
+
+        // Append the new row to the column
+        column.appendChild(newRow);
+    }
+</script>
