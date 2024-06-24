@@ -106,7 +106,7 @@
     }
 
     function fillCalendarTable(tableID, date,  recordList, idx=0){
-        if (idx==0 && idx<recordList.length){ while (new Date(recordList[idx]['date']) < new Date(date.getFullYear(), date.getMonth(), 1)){idx++;} }
+        while (idx<recordList.length && new Date(recordList[idx]['date']) < new Date(date.getFullYear(), date.getMonth(), 1) ){idx++;} 
         for(day of getDaysInMonth(date.getFullYear() , date.getMonth())){
             recordValidInDay = []; recordInvalidInDay = [];
 
