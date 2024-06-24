@@ -124,7 +124,7 @@
 
             tdElement = addColumnInRow(trElement);
             tdElement.innerHTML = day.getDate();
-            tdElement.classList.add( (recordValidInDay.length)? 'valid': (recordInvalidInDay.length)? 'invalid':'none-read' );   
+            if(day<now){tdElement.classList.add( (recordValidInDay.length)? 'valid': (recordInvalidInDay.length)? 'invalid':'none-read' ); }
         }
         return idx;
     }
