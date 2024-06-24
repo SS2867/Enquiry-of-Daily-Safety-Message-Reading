@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<head>
+    <title>Enquiry of Daily Safety Message Reading</title>
+    <link rel="stylesheet" type="text/css" href="styles.css">
+</head>
+<body>
+    <h2>Enquiry of Daily Safety Message Reading</h2>
+    <input id="staffID" type="text" placeholder="Staff ID"><br>
+    <input id="keyCode" type="password" placeholder="Key Code"><br>
+    <input id="refCode" type="text" placeholder="Reference Code"><br>
+    <button onclick="enquire()">Enquire</button>
+    <br><br>
+    <table id="please-wait" style="display: none; height:30px; width:100px; background-color: #fff348" >
+        <tr>
+            <td>Please Wait</td>
+        </tr>
+    </table>
+    <br>
+    <table id="thismonth">
+        <tr><td colspan="7" id="table-title-this"></td></tr>
+        <tr id="table-week-this">
+            <td>Sun</td>
+            <td>Mon</td>
+            <td>Tue</td>
+            <td>Wed</td>
+            <td>Thu</td>
+            <td>Fri</td>
+            <td>Sat</td>
+        </tr>
+    </table>
+    <br>
+    <table id="lastmonth">
+        <tr><td colspan="7" id="table-title-last"></td></tr>
+        <tr id="table-week-this-last">
+            <td>Sun</td>
+            <td>Mon</td>
+            <td>Tue</td>
+            <td>Wed</td>
+            <td>Thu</td>
+            <td>Fri</td>
+            <td>Sat</td>
+        </tr>
+    </table>
+    <br><br>
+    <table>
+        <tr><td class="valid">You read message(s) on this day</td></tr>
+        <tr><td class="invalid">You read message(s) but no ref code is valid</td></tr>
+        <tr><td class="none-read">You didn't read message on this day</td></tr>
+    </table>
+</body>
+<script>
+    const urlParams = new URLSearchParams(window.location.search);
+    document.getElementById("staffID").value = urlParams.get('staffID');
+    document.getElementById("keyCode").value = urlParams.get('keyCode');
+    document.getElementById("refCode").value = urlParams.get('refCode');
+
+
+    var now = new Date();
+    var lastMonth = new Date((new Date()).setMonth(now.getMonth()-1))
+    document.getElementById("table-title-this").innerHTML = now.toLocaleString('default', {year:'numeric', month: 'short' });
+    document.getElementById("table-title-last").innerHTML = lastMonth.toLocaleString('default', {year:'numeric', month: 'short' });
+    // for(day of getDaysInMonth(now.getFullYear() , now.getMonth())){
+        
+    // }
+
+
+    function enquire(){
+        document.getElementById("please-wait").style.display = "block";
+        temp = document.getElementsByClassName("calendar-row");
+        for(i=temp.length-1; i>=0; i--){temp[i].remove();}
+
+        var staffID = document.getElementById("staffID").value;
+        var keyCode = document.getElementById("keyCode").value;
+        var refCode = document.getElementById("refCode").value;
+        
+
+        var params = new URLSearchParams({staffID: staffID,  keyCode: keyCode,  refCode: refCode});
+        var url = "https://script.google.com/macros/s/AKfycbyre_ku290wvcWgbPdfcTkmhr9PnQEfs23Xh-bN8svF1FiZddJDLmYzhRSaejDiM-8D_A/exec";
+        
+        console.log(url + '?' + params)
+        fetch(url + '?' + params, {
+            redirect: "follow",
+            method: 'GET',
+            headers: {
+                'Content-Type': 'text/plain'}
+        })
+            .then(function(response) {
+                console.log(response);
+                if (response.ok) {return response.json();} else {throw new Error('Request failed:', response.status);}
+            })
+            .then(function(responseData) {console.log(responseData); displayResult(responseData.content);})
+            .catch(function(error) {console.log('Request error:', error); });
+        
+        
+    }
+
+    function displayResult(recordList){
+        recordList = recordList.sort((a, b) => new Date(a['date']) - new Date(b['date']));
+        // idx = 0;
+        // while (new Date(recordList[idx]['date']) < new Date(lastMonth.getFullYear(), lastMonth.getMonth(), 1)){idx++;}
+
+        idx = fillCalendarTable("lastmonth", lastMonth, recordList, 0);
+        idx = fillCalendarTable("thismonth", now, recordList, idx);
+        
+        document.getElementById("please-wait").style.display = "none";
+    }
+
+    function fillCalendarTable(tableID, date,  recordList, idx=0){
+        if (idx==0 && idx<recordList.length){ while (new Date(recordList[idx]['date']) < new Date(date.getFullYear(), date.getMonth(), 1)){idx++;} }
+        for(day of getDaysInMonth(date.getFullYear() , date.getMonth())){
+            recordValidInDay = []; recordInvalidInDay = [];
+
+            while (idx<recordList.length && isSameDay(day, new Date(recordList[idx]['date']))){
+                record = recordList[idx];
+                if (record['refMatch']){recordValidInDay.push(record);} else {recordInvalidInDay.push(record);}
+                idx++;
+            }
+            
+            if (getDayInWeek(day)===0){trElement = addRow(tableID);}else if (day.getDate()==1){
+                trElement = addRow(tableID);
+                for (i = 0; i < getDayInWeek(day); i++) { addColumnInRow(trElement); }
+            }
+            trElement.classList.add('calendar-row')
+
+            tdElement = addColumnInRow(trElement);
+            tdElement.innerHTML = day.getDate();
+            tdElement.classList.add( (recordValidInDay.length)? 'valid': (recordInvalidInDay.length)? 'invalid':'none-read' );   
+        }
+        return idx;
+    }
+
+    function getDaysInMonth(year, month) {
+        const daysInMonth = [];
+        const date = new Date(year, month, 1);
+
+        while (date.getMonth() === month) {
+            daysInMonth.push(new Date(date));
+            date.setDate(date.getDate() + 1);
+        }
+
+        return daysInMonth;
+    }
+
+    function getDayInWeek(date) {
+        const target = new Date(date.valueOf());
+        const dayNumber = (date.getUTCDay()+1) % 7;
+        return dayNumber;
+    }
+    function isSameDay(dateA, dateB) {
+        return (
+            dateA.getFullYear() === dateB.getFullYear() &&
+            dateA.getMonth() === dateB.getMonth() &&
+            dateA.getDate() === dateB.getDate()
+        );
+    }
+
+    function addRow(tableID) {
+        const table = document.getElementById(tableID); // Get the column element
+        const newRow = document.createElement('tr');
+        table.appendChild(newRow);
+        return newRow;
+    }
+    function addColumnInRow(row){
+        const newCol = document.createElement('td');
+        row.appendChild(newCol);
+        return newCol;
+    }
+</script>
