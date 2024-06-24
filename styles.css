@@ -1,0 +1,11 @@
+.valid {
+    background-color: #5ff587;
+}
+.invalid{
+    background-color: #ee7fff;
+}
+
+.none-read{
+    background-color: #fc7979;
+}
+
