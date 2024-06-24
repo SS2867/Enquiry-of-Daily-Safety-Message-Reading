@@ -9,3 +9,9 @@
     background-color: #fc7979;
 }
 
+body {
+    width: 300px; /* Set the desired width */
+    margin: 0 auto; /* Center the content horizontally */
+}
+
+
