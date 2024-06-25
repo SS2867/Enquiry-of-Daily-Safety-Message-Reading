@@ -2,6 +2,7 @@
 <head>
     <title>Enquiry of Daily Safety Message Reading</title>
     <link rel="stylesheet" type="text/css" href="styles.css">
+    <meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 </head>
 <body>
     <h2>Enquiry of Daily Safety Message Reading</h2>
@@ -106,7 +107,7 @@
     }
 
     function fillCalendarTable(tableID, date,  recordList, idx=0){
-        if (idx==0 && idx<recordList.length){ while (new Date(recordList[idx]['date']) < new Date(date.getFullYear(), date.getMonth(), 1)){idx++;} }
+        while (idx<recordList.length && new Date(recordList[idx]['date']) < new Date(date.getFullYear(), date.getMonth(), 1) ){idx++;} 
         for(day of getDaysInMonth(date.getFullYear() , date.getMonth())){
             recordValidInDay = []; recordInvalidInDay = [];
 
@@ -124,7 +125,7 @@
 
             tdElement = addColumnInRow(trElement);
             tdElement.innerHTML = day.getDate();
-            tdElement.classList.add( (recordValidInDay.length)? 'valid': (recordInvalidInDay.length)? 'invalid':'none-read' );   
+            if(day<now){tdElement.classList.add( (recordValidInDay.length)? 'valid': (recordInvalidInDay.length)? 'invalid':'none-read' ); }
         }
         return idx;
     }
@@ -165,4 +166,8 @@
         row.appendChild(newCol);
         return newCol;
     }
+    
+    if (document.getElementById("staffID").value!="" && 
+        document.getElementById("keyCode").value!="" && 
+        document.getElementById("keyCode").value!=""){enquire();}
 </script>
