@@ -12,42 +12,18 @@
     <button onclick="enquire()">Enquire</button>
     <br><br>
     <table id="please-wait" style="display: none; height:30px; width:100px; background-color: #fff348" >
-        <tr>
-            <td>Please Wait</td>
-        </tr>
+        <tr><td>Please Wait</td></tr>
     </table>
     <br>
-    <table id="thismonth">
-        <tr><td colspan="7" id="table-title-this"></td></tr>
-        <tr id="table-week-this">
-            <td>Sun</td>
-            <td>Mon</td>
-            <td>Tue</td>
-            <td>Wed</td>
-            <td>Thu</td>
-            <td>Fri</td>
-            <td>Sat</td>
-        </tr>
-    </table>
-    <br>
-    <table id="lastmonth">
-        <tr><td colspan="7" id="table-title-last"></td></tr>
-        <tr id="table-week-this-last">
-            <td>Sun</td>
-            <td>Mon</td>
-            <td>Tue</td>
-            <td>Wed</td>
-            <td>Thu</td>
-            <td>Fri</td>
-            <td>Sat</td>
-        </tr>
+    <table id="message-table" >
+        <tr><td> <strong>Message Reading Statistics</strong> </td></tr>
     </table>
     <br><br>
     <table>
-        <tr><td class="valid">You read message(s) on this day</td></tr>
+        <tbody><tr><td class="valid">You read message(s) on this day</td></tr>
         <tr><td class="invalid">You read message(s) but no ref code is valid</td></tr>
         <tr><td class="none-read">You didn't read message on this day</td></tr>
-    </table>
+    </tbody></table>
 </body>
 <script>
     const urlParams = new URLSearchParams(window.location.search);
@@ -56,10 +32,6 @@
     document.getElementById("refCode").value = urlParams.get('refCode');
 
 
-    var now = new Date();
-    var lastMonth = new Date((new Date()).setMonth(now.getMonth()-1))
-    document.getElementById("table-title-this").innerHTML = now.toLocaleString('default', {year:'numeric', month: 'short' });
-    document.getElementById("table-title-last").innerHTML = lastMonth.toLocaleString('default', {year:'numeric', month: 'short' });
     // for(day of getDaysInMonth(now.getFullYear() , now.getMonth())){
         
     // }
@@ -76,7 +48,7 @@
         
 
         var params = new URLSearchParams({staffID: staffID,  keyCode: keyCode,  refCode: refCode});
-        var url = "https://script.google.com/macros/s/AKfycbyre_ku290wvcWgbPdfcTkmhr9PnQEfs23Xh-bN8svF1FiZddJDLmYzhRSaejDiM-8D_A/exec";
+        var url = "https://script.google.com/macros/s/AKfycbyhJ1bRJCYsq0jLZyUhRiuam_muPcsOdD63wIdVoYMWrMJGLMND7c-i8lvhMd6-KE7XVQ/exec";
         
         console.log(url + '?' + params)
         fetch(url + '?' + params, {
@@ -89,22 +61,46 @@
                 console.log(response);
                 if (response.ok) {return response.json();} else {throw new Error('Request failed:', response.status);}
             })
-            .then(function(responseData) {console.log(responseData); displayResult(responseData.content);})
+            .then(function(responseData) {console.log(responseData); displayResult(responseData.content, params);})
             .catch(function(error) {console.log('Request error:', error); });
         
         
     }
 
-    function displayResult(recordList){
-        recordList = recordList.sort((a, b) => new Date(a['date']) - new Date(b['date']));
-        // idx = 0;
-        // while (new Date(recordList[idx]['date']) < new Date(lastMonth.getFullYear(), lastMonth.getMonth(), 1)){idx++;}
+    function displayResult(response, params){
+        formURL = response["formURL"];
+        formParams = response["formParams"];
+        recordList = response["messageList"];
+        if (recordList.length==0){
+            recordList = [{"message": "Error: No reading record has been found, or Staff ID / Key Code is incorrect", read:0},
+            {"message": "Error: You need to have at least one reading record to see the reading list", read:0}]
+        }
 
-        idx = fillCalendarTable("lastmonth", lastMonth, recordList, 0);
-        idx = fillCalendarTable("thismonth", now, recordList, idx);
+        for(record of recordList){
+            trElement = addRow("message-table");
+            trElement.classList.add('calendar-row');
+
+            tdElement = addColumnInRow(trElement);
+            //tdElement.innerHTML = record['message'];
+            aElement = document.createElement('a');
+            aElement.innerHTML = record['message'];
+            if(formURL.length){
+                aElement.href = formURL + "?" + new URLSearchParams([
+                    [formParams["staffID"], params.get("staffID")],
+                    [formParams["keyCode"], params.get("keyCode")],  
+                    [formParams["refCode"], params.get("refCode")],
+                    [formParams["message"], record['message']],
+                ]);
+                aElement.classList.add("a-plain-text")
+            }
+            tdElement.appendChild(aElement);
+            
+            tdElement.classList.add( (record['read']==1)? 'valid': (record['read']==2)? 'invalid':'none-read' );
+        }
         
         document.getElementById("please-wait").style.display = "none";
     }
+
 
     function fillCalendarTable(tableID, date,  recordList, idx=0){
         while (idx<recordList.length && new Date(recordList[idx]['date']) < new Date(date.getFullYear(), date.getMonth(), 1) ){idx++;} 
@@ -122,6 +118,8 @@
                 for (i = 0; i < getDayInWeek(day); i++) { addColumnInRow(trElement); }
             }
             trElement.classList.add('calendar-row')
+            
+            
 
             tdElement = addColumnInRow(trElement);
             tdElement.innerHTML = day.getDate();
@@ -129,6 +127,7 @@
         }
         return idx;
     }
+
 
     function getDaysInMonth(year, month) {
         const daysInMonth = [];
